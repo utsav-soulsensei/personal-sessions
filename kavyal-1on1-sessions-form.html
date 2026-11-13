@@ -274,19 +274,25 @@
       font-size: 13.5px;
       font-weight: 600;
       color: var(--ink);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      display: block;
       line-height: 1.4;
     }
     .form-label .q-num {
       color: var(--acc);
       font-weight: 700;
       font-size: 14px;
+      margin-right: 3px;
     }
     .form-label .req {
       color: var(--acc2);
       font-weight: 700;
+      margin-left: 3px;
+    }
+    .form-label .opt {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--body-muted);
+      margin-left: 4px;
     }
     .form-input {
       width: 100%;
@@ -785,7 +791,7 @@
     <!-- ==================== 02 URGENCY & INVITATION ==================== -->
     <div id="sec-02-invite" class="sec" style="display: flex; flex-direction: column; gap: 16px;">
       <div>
-        <div class="it d1 pk">1:1 Personal Guidance Sessions</div>
+        <div class="ser d1 pk">1:1 Personal Guidance Sessions</div>
         <div class="ser d1" style="font-size: 32px; line-height: 1.15; margin-top: 4px;">Hold your slot before it&#8217;s gone!</div>
       </div>
 
@@ -854,10 +860,23 @@
           <div class="error-msg" id="mobile-error">Please enter a valid 10-digit mobile number.</div>
         </div>
 
-        <!-- Question 3: Area of Life Seeking Clarity On -->
+        <!-- Question 3: Seat Number (Optional) -->
+        <div class="form-group">
+          <label class="form-label" for="seat-number">
+            <span class="q-num">3.</span> Seat Number <span class="opt">(Optional)</span>
+          </label>
+          <input type="text"
+                 id="seat-number"
+                 name="seatNumber"
+                 autocomplete="off"
+                 placeholder="e.g. A-12, Row C (Optional)"
+                 class="form-input">
+        </div>
+
+        <!-- Question 4: Area of Life Seeking Clarity On -->
         <div class="form-group">
           <label class="form-label">
-            <span class="q-num">3.</span> Which area of your life are you seeking clarity on? <span class="req">*</span>
+            <span class="q-num">4.</span> Which area of your life are you seeking clarity on? <span class="req">*</span>
           </label>
           <div class="clarity-grid" id="clarity-selector">
             <button type="button" class="chip-btn" data-value="Love">
@@ -918,10 +937,10 @@
           <div class="error-msg" id="clarity-error">Please select an area of life.</div>
         </div>
 
-        <!-- Question 4: Session to Explore -->
+        <!-- Question 5: Session to Explore -->
         <div class="form-group">
           <label class="form-label">
-            <span class="q-num">4.</span> Which session would you like to explore? <span class="req">*</span>
+            <span class="q-num">5.</span> Which session would you like to explore? <span class="req">*</span>
           </label>
           <div class="session-cards" id="session-selector">
 
@@ -1137,6 +1156,10 @@
           <span class="summary-key">Mobile:</span>
           <span class="summary-val" id="receipt-mobile">-</span>
         </div>
+        <div class="summary-row" id="receipt-seat-row" style="display: none;">
+          <span class="summary-key">Seat:</span>
+          <span class="summary-val" id="receipt-seat">-</span>
+        </div>
         <div class="summary-row">
           <span class="summary-key">Clarity Area:</span>
           <span class="summary-val" id="receipt-clarity">-</span>
@@ -1235,6 +1258,7 @@
     var form = document.getElementById('slot-booking-form');
     var fullNameInput = document.getElementById('full-name');
     var mobileInput = document.getElementById('mobile-number');
+    var seatNumberInput = document.getElementById('seat-number');
     var selectedClarityInput = document.getElementById('selected-clarity');
     var otherInputContainer = document.getElementById('other-input-container');
     var otherDetailsInput = document.getElementById('other-details');
@@ -1324,6 +1348,7 @@
 
       var nameVal = fullNameInput.value.trim();
       var mobileVal = mobileInput.value.trim();
+      var seatVal = seatNumberInput ? seatNumberInput.value.trim() : '';
       var clarityVal = selectedClarityInput.value.trim();
       var otherVal = otherDetailsInput.value.trim();
       var sessionVal = selectedSessionInput.value.trim();
@@ -1379,6 +1404,7 @@
         bookingId: bookingId,
         fullName: nameVal,
         mobileNumber: mobileVal,
+        seatNumber: seatVal,
         clarityArea: clarityVal,
         otherDetails: otherVal,
         sessionType: sessionVal,
@@ -1445,6 +1471,16 @@
       document.getElementById('receipt-token').textContent = '#' + payload.bookingId;
       document.getElementById('receipt-name').textContent = payload.fullName;
       document.getElementById('receipt-mobile').textContent = '+91 ' + payload.mobileNumber;
+      var seatRow = document.getElementById('receipt-seat-row');
+      var seatEl = document.getElementById('receipt-seat');
+      if (seatRow && seatEl) {
+        if (payload.seatNumber) {
+          seatEl.textContent = payload.seatNumber;
+          seatRow.style.display = 'flex';
+        } else {
+          seatRow.style.display = 'none';
+        }
+      }
       document.getElementById('receipt-clarity').textContent = payload.clarityArea + (payload.otherDetails ? ' (' + payload.otherDetails + ')' : '');
       document.getElementById('receipt-session').textContent = payload.sessionType;
 
@@ -1538,9 +1574,10 @@
       }
       var html = '';
       items.slice().reverse().forEach(function (it, idx) {
+        var seatText = it.seatNumber ? ' • Seat: ' + it.seatNumber : '';
         html += '<div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px 0;">' +
                   '<div style="font-weight: 700; color: #fff;">' + (it.fullName || 'Anonymous') + ' <span style="font-size:11px; color:var(--acc);">(' + it.bookingId + ')</span></div>' +
-                  '<div style="color:var(--body); font-size:11.5px;">+91 ' + it.mobileNumber + ' • ' + it.sessionType + ' • ' + it.clarityArea + '</div>' +
+                  '<div style="color:var(--body); font-size:11.5px;">+91 ' + it.mobileNumber + seatText + ' • ' + it.sessionType + ' • ' + it.clarityArea + '</div>' +
                 '</div>';
       });
       listEl.innerHTML = html;
@@ -1552,7 +1589,7 @@
         alert('No data to export.');
         return;
       }
-      var headers = ['Timestamp', 'Booking ID', 'Full Name', 'Mobile Number', 'Area of Clarity', 'Other Details', 'Session Type', 'Status'];
+      var headers = ['Timestamp', 'Booking ID', 'Full Name', 'Mobile Number', 'Seat Number', 'Area of Clarity', 'Other Details', 'Session Type', 'Status'];
       var csvRows = [headers.join(',')];
 
       items.forEach(function (row) {
@@ -1561,6 +1598,7 @@
           JSON.stringify(row.bookingId || ''),
           JSON.stringify(row.fullName || ''),
           JSON.stringify("'" + (row.mobileNumber || '')),
+          JSON.stringify(row.seatNumber || ''),
           JSON.stringify(row.clarityArea || ''),
           JSON.stringify(row.otherDetails || ''),
           JSON.stringify(row.sessionType || ''),

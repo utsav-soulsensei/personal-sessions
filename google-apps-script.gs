@@ -47,6 +47,7 @@ function getOrCreateSheet() {
       "Booking ID",
       "Full Name",
       "Mobile Number",
+      "Seat Number",
       "Area of Clarity",
       "Specific Topic / Notes",
       "Selected Session",
@@ -60,6 +61,24 @@ function getOrCreateSheet() {
     headerRange.setFontColor("#FFFFFF");
     sheet.setFrozenRows(1);
     sheet.autoResizeColumns(1, headers.length);
+  } else {
+    // If sheet already has headers, check if "Seat Number" exists in header row
+    var lastCol = sheet.getLastColumn();
+    if (lastCol > 0) {
+      var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var seatColIdx = existingHeaders.indexOf("Seat Number");
+      if (seatColIdx === -1) {
+        var mobileIdx = existingHeaders.indexOf("Mobile Number");
+        if (mobileIdx !== -1) {
+          sheet.insertColumnAfter(mobileIdx + 1);
+          var seatCell = sheet.getRange(1, mobileIdx + 2);
+          seatCell.setValue("Seat Number");
+          seatCell.setFontWeight("bold");
+          seatCell.setBackground("#471C35");
+          seatCell.setFontColor("#FFFFFF");
+        }
+      }
+    }
   }
 
   return sheet;
@@ -91,6 +110,7 @@ function doPost(e) {
       data.bookingId || ("SS-KAV-" + Math.floor(1000 + Math.random() * 9000)),
       data.fullName || "",
       "'" + (data.mobileNumber || ""), // Prefix with single quote to preserve leading zeros in phone numbers
+      data.seatNumber || "",
       data.clarityArea || "",
       data.otherDetails || "",
       data.sessionType || "",
